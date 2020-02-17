@@ -88,14 +88,28 @@ class Metodo_acuracia(_BaseHeterogeneousEnsemble):
         return sqrt(sum([(x - y)**2 for x, y in zip(obj1, obj2)]))
 
 class Metodo_similaridade(_BaseHeterogeneousEnsemble):
-    def _init_(self):
-        pass
+    def _init_(self, estimators, numPontos, qtdeClassificadores):
+        self.estimators = estimators    
+        self.numPontos = numPontos
+        self.qtdeClassificadores = qtdeClassificadores
         
     def fit(self, X, y):
-        pass
+        #TODO com base em X fazer matriz de covariância
+        for estimator in self.estimators:
+            estimator.fit(X, y)
     
     def predict(self, X):
-        pass
+        return [self._predict(x) for x in X]
             
     def _predict(self, x):
+        selectedEstimators = self._selectEstimators(x)
+        return self._voting(selectedEstimators, x)
+        
+    def _createObjects(self):
+        pass
+        
+    def _selectEstimators(self, x):
+        pass
+        
+    def _voting(self, estimators, x):
         pass
