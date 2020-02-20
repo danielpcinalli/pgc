@@ -3,6 +3,7 @@
 from sklearn.ensemble._base import _BaseHeterogeneousEnsemble
 from sklearn.metrics import accuracy_score
 from math import sqrt
+import numpy as np
 
 class Metodo_acuracia(_BaseHeterogeneousEnsemble):
     def __init__(self, estimators, numPontos, accMin, X, y):
@@ -94,7 +95,10 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
         self.qtdeClassificadores = qtdeClassificadores
         
     def fit(self, X, y):
-        #TODO com base em X fazer matriz de covariância
+        
+        #usando desvio padrão para usar np.random.normal
+        self.sigmas = [sqrt(np.var(column)/10) for column in X.T]
+        
         for estimator in self.estimators:
             estimator.fit(X, y)
     
@@ -105,8 +109,10 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
         selectedEstimators = self._selectEstimators(x)
         return self._voting(selectedEstimators, x)
         
-    def _createObjects(self):
-        pass
+    def _createObjects(self, x):
+        objects = [np.random.normal(x, self.sigmas) for _ in range(self.numPontos)]
+        return objects
+        
         
     def _selectEstimators(self, x):
         pass
