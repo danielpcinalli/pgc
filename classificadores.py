@@ -115,7 +115,31 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
         
         
     def _selectEstimators(self, x):
-        pass
+        objects = self._createObjects(x)
+        
+        preds = [estimator.predict(objects) for estimator in self.estimators]
+        decisionSimilarities = [(
+            self.decisionSimilarity(pred, preds),
+            estimator) for pred, estimator in zip(preds, self.estimators)]
+            
+        sortedEstimators = sorted(decisionSimilarities, reverse = True)
+        
+        return sortedEstimators[:self.qtdeClassificadores]
+        
         
     def _voting(self, estimators, x):
         pass
+        
+    def _decisionSimilarity(self, y_preds, Y):
+        """Recebe array de predições de um estimador e lista de array de predições de todos os estimadores
+        Retorna similaridade de decisão 
+        """
+        
+        decisionSimilarity = 0
+        for y in Y:
+            decisionSimilarity += [a == b for a, b in zip(y, y_preds)]
+        
+        return decisionSimilarity
+        
+        
+        
