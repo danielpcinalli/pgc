@@ -89,7 +89,7 @@ class Metodo_acuracia(_BaseHeterogeneousEnsemble):
         return sqrt(sum([(x - y)**2 for x, y in zip(obj1, obj2)]))
 
 class Metodo_similaridade(_BaseHeterogeneousEnsemble):
-    def _init_(self, estimators, numPontos, qtdeClassificadores):
+    def __init__(self, estimators, numPontos, qtdeClassificadores):
         self.estimators = estimators    
         self.numPontos = numPontos
         self.qtdeClassificadores = qtdeClassificadores
@@ -119,16 +119,30 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
         
         preds = [estimator.predict(objects) for estimator in self.estimators]
         decisionSimilarities = [(
-            self.decisionSimilarity(pred, preds),
+            self._decisionSimilarity(pred, preds),
             estimator) for pred, estimator in zip(preds, self.estimators)]
             
-        sortedEstimators = sorted(decisionSimilarities, reverse = True)
+        sortedEstimators = sorted(decisionSimilarities, reverse = True, key = lambda simEst: simEst[0])
+        
+        sortedEstimators = [estimator for _, estimator in sortedEstimators]
         
         return sortedEstimators[:self.qtdeClassificadores]
         
         
     def _voting(self, estimators, x):
-        pass
+        votes = dict()
+
+        for estimator in estimators:
+            y_pred = estimator.predict([x])[0]
+            if y_pred in votes.keys():
+                newValue = votes.get(y_pred) + 1
+                votes.update({y_pred : newValue})
+            else:
+                votes.update({y_pred : 1})
+                
+        winner = sorted(votes, reverse = True)[0]
+        
+        return winner
         
     def _decisionSimilarity(self, y_preds, Y):
         """Recebe array de predições de um estimador e lista de array de predições de todos os estimadores
@@ -137,7 +151,7 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
         
         decisionSimilarity = 0
         for y in Y:
-            decisionSimilarity += [a == b for a, b in zip(y, y_preds)]
+            decisionSimilarity += [a == b for a, b in zip(y, y_preds)].count(True)
         
         return decisionSimilarity
         
