@@ -41,8 +41,8 @@ class Metodo_acuracia(_BaseHeterogeneousEnsemble):
                 votes.update({y_pred : newValue})
             else:
                 votes.update({y_pred : w})
-                
-        winner = sorted(votes, reverse = True)[0]
+        
+        winner = sorted(votes.items(), reverse = True, key = lambda v : v[1])[0][0]
         
         return winner
         
@@ -140,7 +140,7 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
             else:
                 votes.update({y_pred : 1})
                 
-        winner = sorted(votes, reverse = True)[0]
+        winner = sorted(votes.items(), reverse = True, key = lambda v : v[1])[0][0]
         
         return winner
         
