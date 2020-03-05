@@ -4,6 +4,7 @@ from sklearn.ensemble._base import _BaseHeterogeneousEnsemble
 from sklearn.metrics import accuracy_score
 from math import sqrt
 import numpy as np
+from collections import Counter
 
 class Metodo_acuracia(_BaseHeterogeneousEnsemble):
     def __init__(self, estimators, numPontos, accMin, X, y):
@@ -32,15 +33,11 @@ class Metodo_acuracia(_BaseHeterogeneousEnsemble):
         """Recebe lista de tuplas (peso, estimador) e objeto x
            Retorna classe escolhida
         """
-        votes = dict()
+        votes = Counter()
         
         for w, estimator in weight_estimators:
             y_pred = estimator.predict([x])[0]
-            if y_pred in votes.keys():
-                newValue = votes.get(y_pred) + w
-                votes.update({y_pred : newValue})
-            else:
-                votes.update({y_pred : w})
+            votes[y_pred] += w
         
         winner = sorted(votes.items(), reverse = True, key = lambda v : v[1])[0][0]
         
@@ -130,15 +127,11 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
         
         
     def _voting(self, estimators, x):
-        votes = dict()
+        votes = Counter()
 
         for estimator in estimators:
             y_pred = estimator.predict([x])[0]
-            if y_pred in votes.keys():
-                newValue = votes.get(y_pred) + 1
-                votes.update({y_pred : newValue})
-            else:
-                votes.update({y_pred : 1})
+            votes[y_pred] += 1
                 
         winner = sorted(votes.items(), reverse = True, key = lambda v : v[1])[0][0]
         
