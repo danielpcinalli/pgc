@@ -10,7 +10,7 @@ class Classifier:
 
 def test_weightedVoting():
     
-    macc = Metodo_acuracia(0, 0, 0, [0], [0])
+    macc = Metodo_acuracia(0, 0, 0)
 
     clfs = [ Classifier('a'), Classifier('a'), Classifier('b'), Classifier('c')]
     weights = [0.2, 0.1, 0.5, 0.2]
@@ -52,13 +52,14 @@ def test_getNearbyPoints():
 
     nearest = [([0, 0, 1], 0),([2, 0, 0], 0),([2, 2, 2], 0)]
 
-    macc = Metodo_acuracia(0, numObjects, 0, X, y)
+    macc = Metodo_acuracia(0, numObjects, 0)
+    macc.setKnownObjects(X, y)
     
     assert nearest == macc._getNearbyPoints(x)
     
 def test_distance():
 
-    macc = Metodo_acuracia(0, 0, 0, [0], [0])
+    macc = Metodo_acuracia(0, 0, 0)
     x = [1, 1, 1]
     y = [2, 1, 0]
     assert sqrt(2) == macc._distance(x, y)
