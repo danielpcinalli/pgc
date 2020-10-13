@@ -18,117 +18,233 @@ FN_AVILA_TS                 = PATH_DATASETS + "avila/avila-ts.txt"
 FN_AVILA_TR                 = PATH_DATASETS + "avila/avila-tr.txt"
 FN_CROWDSOURCEMAPPING_TEST  = PATH_DATASETS + "crowdsourcedMapping/testing.csv"
 FN_CROWDSOURCEMAPPING_TRAIN = PATH_DATASETS + "crowdsourcedMapping/training.csv"
+FN_PAGE_BLOCKS              = PATH_DATASETS + "page_blocks/page-blocks.data"
+FN_RICE                     = PATH_DATASETS + "rice_gonen_and_jasmine/Rice-Gonen andJasmine.csv"
+FN_LETTER_RECOGNITIION      = PATH_DATASETS + "letter_recognition/letter-recognition.data"
+FN_ELECT_GRID_STABILITY     = PATH_DATASETS + "electrical_grid_stability/Data_for_UCI_named.csv"
 
-def load_yeast():
+def load_yeast(format = 'np'):
     data = pd.read_csv(FN_YEAST, sep = "\s+", header = None)
 
-    X = data.iloc[:, 1:9].to_numpy()
-    y = data.iloc[:, 9].to_numpy()
-    return X, y
+    X = data.iloc[:, 1:9]
+    y = data.iloc[:, 9]
 
-def load_statlog_vehicle():
+
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+
+def load_statlog_vehicle(format = 'np'):
     files = glob.glob(FN_STATLOG_SHUTTLE_VEHICLE)
 
     dfs = [pd.read_csv(fn, sep = "\s+", header = None) for fn in files]
 
     data = pd.concat(dfs, axis = 0)
 
-    X = data.iloc[:, :18].to_numpy()
-    y = data.iloc[:, 18].to_numpy()
-    return X, y
+    X = data.iloc[:, :18].astype(float)
+    y = data.iloc[:, 18]
 
-def load_statlog_shuttle():
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+def load_statlog_shuttle(format = 'np'):
     data1 = read_csv(FN_STATLOG_SHUTTLE_DATA, sep = " ", header = None)
     data2 = read_csv(FN_STATLOG_SHUTTLE_TEST, sep = " ", header = None)
 
     data = pd.concat([data1, data2], axis = 0)
 
-    X = data.iloc[:, :9].to_numpy()
-    y = data.iloc[:, 9].to_numpy()
-    return X, y
+    X = data.iloc[:, :9]
+    y = data.iloc[:, 9]
 
-def load_img_seg():
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+def load_image_segmentation(format = 'np'):
     data1 = read_csv(FN_IMG_SEG_DATA, sep = ",", skiprows = 5, header = None)
     data2 = read_csv(FN_IMG_SEG_TEST, sep = ",", skiprows = 5, header = None)
 
     data = pd.concat([data1, data2], axis = 0)
 
-    X = data.iloc[:, 1:].to_numpy()
-    y = data.iloc[:, 0].to_numpy()
-    return X, y
+    X = data.iloc[:, 1:]
+    X = X.drop(columns = [3]) #todos as instâncias tem valor igual nesse atributo
+    y = data.iloc[:, 0]
 
-def load_pulsar():
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+def load_htru_pulsar(format = 'np'):
     data = read_csv(FN_PULSAR, sep = ",", header = None)
-    X = data.iloc[:, 0:8].to_numpy()
-    y = data.iloc[:, 8].to_numpy()
-    return X, y
+    X = data.iloc[:, 0:8]
+    y = data.iloc[:, 8]
 
-def load_ecoli():
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+def load_ecoli(format = 'np'):
     data = read_csv(FN_ECOLI, sep = "\s+", header = None)
-    X = data.iloc[:, 1:8].to_numpy()
-    y = data.iloc[:, 8].to_numpy()
-    return X, y
+    X = data.iloc[:, 1:8]
+    y = data.iloc[:, 8]
 
-def load_seeds():
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+def load_seeds(format = 'np'):
     data = read_csv(FN_SEEDS, sep = "\s+", header = None)
-    X = data.iloc[:, 0:7].to_numpy()
-    y = data.iloc[:, 7].to_numpy()
-    return X, y
+    X = data.iloc[:, 0:7]
+    y = data.iloc[:, 7]
 
-def load_anuran(classification = "species"):
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+
+def _load_anuran(classification = "species", format = 'np'):
     data = read_csv(FN_ANURAN, sep = ",")
 
-    X = data.iloc[:, 0:22].to_numpy()
+    X = data.iloc[:, 0:22]
     if classification == "species":
-        y = data.iloc[:, 24].to_numpy()
+        y = data.iloc[:, 24]
     if classification == "genus":
-        y = data.iloc[:, 23].to_numpy()
+        y = data.iloc[:, 23]
     if classification == "family":
-        y = data.iloc[:, 22].to_numpy()
+        y = data.iloc[:, 22]
 
-    return X, y
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+        
 
-def load_anuran_species():
-    return load_anuran("species")
+def load_anuran_species(format = 'np'):
+    return _load_anuran("species", format)
 
-def load_anuran_genus():
-    return load_anuran("genus")
+def load_anuran_genus(format = 'np'):
+    return _load_anuran("genus", format)
 
-def load_anuran_family():
-    return load_anuran("family")
+def load_anuran_family(format = 'np'):
+    return _load_anuran("family", format)
 
-def load_avila():
+def load_avila(format = 'np'):
 
     data1 = pd.read_csv(FN_AVILA_TS, sep=',', header=None)
     data2 = pd.read_csv(FN_AVILA_TR, sep=',', header=None)
 
     data = pd.concat([data1, data2], axis = 0)
 
-    X = data.iloc[:, 0:10].to_numpy()
-    y = data.iloc[:, 10].to_numpy()
+    X = data.iloc[:, 0:10]
+    y = data.iloc[:, 10]
 
-    return X, y
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
 
-def load_crowdsource_mapping():
+def load_crowdsource_mapping(format = 'np'):
 
     data1 = pd.read_csv(FN_CROWDSOURCEMAPPING_TEST, sep=',')
     data2 = pd.read_csv(FN_CROWDSOURCEMAPPING_TRAIN, sep=',')
 
     data = pd.concat([data1, data2], axis = 0)
 
-    X = data.iloc[:, 1:29].to_numpy()
-    y = data.iloc[:, 0].to_numpy()
+    X = data.iloc[:, 1:29]
+    y = data.iloc[:, 0]
 
-    return X, y
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+
+def load_page_blocks(format = 'np'):
+    data = pd.read_csv(FN_PAGE_BLOCKS, sep="\s+", header=None)
+
+    X = data.iloc[:, :-1].astype(float)
+    y = data.iloc[:, -1]
+
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+def load_rice(format = 'np'):
+    data = pd.read_csv(FN_RICE)
+
+    X = data.iloc[:, 1:-1].astype(float)#primeira coluna é id
+    y = data.iloc[:, -1]
+
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+def load_letter_recognition(format = 'np'):
+    data = pd.read_csv(FN_LETTER_RECOGNITIION, header=None)
+
+    X = data.iloc[:, 1:].astype(float)#primeira coluna é id
+    y = data.iloc[:, 0]
+
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+def load_electrical_grid_stability(format='np'):
+    data = pd.read_csv(FN_ELECT_GRID_STABILITY)
+
+    X = data.iloc[:, :-1]
+    y = data.iloc[:, -1]
+
+    if format == 'np':
+        return X.to_numpy(), y.to_numpy()
+    if format == 'pd':
+        X['class'] = y
+        return X
+
+
+def z_score_normalize(X):
+    for i in range(X.shape[1]):
+        X.iloc[:, i] = (X.iloc[:, i] -X.iloc[:, i].mean())/X.iloc[:, i].std()
+    return X
+
+def _test_dataframe():
+
+    df = pd.DataFrame(np.array([
+        [1,2,3,0,5],
+        [0,0,7,8,9],
+        [0,12,13,14,15]
+    ]))
+    return df
 
 def main():
-    all_loaders = []
-    for k, v in globals().items():
-        if 'load_' in k:
-            all_loaders.append(v)
-    for load_func in all_loaders:
-        X, y = load_func()
-        print(f'{load_func.__name__} : {X.shape[0]} instances, {X.shape[1]} atributes')
+    df = load_letter_recognition(format='pd')
+    print(df.head())
+    print(df.dtypes)
 
 if __name__ == '__main__':
     main()
