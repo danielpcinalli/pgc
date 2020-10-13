@@ -51,24 +51,6 @@ def main():
         plt.text(0, 0, text)
         ax1.axis('off')
 
-        #contagem de nans
-        # ax2 = fig.add_subplot(gs[3, :])
-        # nans_per_class = df.isna().sum()
-        # nans_per_class.plot(kind='bar', sort_columns=True)
-
-        # for p in ax2.patches:
-        #     x = p.get_x() + p.get_width() / 2
-        #     y = p.get_y() + p.get_height()
-        #     heigth = p.get_height()
-        #     ax2.annotate(heigth, (x, y), ha='center', va='bottom')
-
-
-        # plt.ylim(0, None)
-        # plt.xticks(rotation=60)
-        # plt.title('Contagem de NANs')
-
-
-
         #contagem de instâncias por classe
         ax3 = fig.add_subplot(gs[1, :])
         sns.countplot(data=df, x='class', order=df['class'].value_counts().index)
@@ -87,17 +69,6 @@ def main():
         plt.title('Contagem de classes')
         plt.xlabel("Classes")
         plt.ylabel("Contagem")
-
-
-        #tipos
-        # ax4 = fig.add_subplot(gs[2, 0])
-        # plt.text(0, 0, str(df.dtypes))
-        # ax4.axis('off')
-
-        #violinplot
-        # ax5 = fig.add_subplot(gs[1:, :])
-        # sns.boxplot(data = df)
-        # plt.xticks(rotation=45)
 
         #contagem de valores zero
         ax6 = fig.add_subplot(gs[3:, :])
