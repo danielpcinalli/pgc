@@ -6,11 +6,15 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
 #from sklearn import cross_validation
 import sklearn
-
-from datasets import load_ecoli, load_anuran, load_yeast
+from datasets import load_leaf
 import util
+
+import numpy as np
+np.random.seed(0)
+
 
 def main():
     try:
@@ -36,10 +40,11 @@ def testeMetodoAcuracia(numPontosProximos, accMin):
     print(f"Quantidade de objetos próximos: {numPontosProximos}")
     print(f"Acurácia mínima: {accMin}")
 
-    X, y = load_ecoli()
+    X, y = load_leaf()
 
-    #clfs = [DecisionTreeClassifier() for i in range(100)]
-    clfs = [RandomForestClassifier(n_estimators = 20) for i in range(50)]
+    clfs = [DecisionTreeClassifier() for i in range(100)]
+    #clfs = [RandomForestClassifier(n_estimators = 20) for i in range(50)]
+    #clfs = [KNeighborsClassifier() for i in range(50)]
 
     macc = Metodo_acuracia(clfs, numPontosProximos, accMin)
 
@@ -64,7 +69,7 @@ def testeMetodoSimilaridade(numObjetosGerados, qtdeClassificadores):
     print(f"Quantidade de objetos gerados: {numObjetosGerados}")
     print(f"Quantidade de classificadores escolhidos: {qtdeClassificadores}")
 
-    X, y = load_ecoli()
+    X, y = load_leaf()
 
     #clfs = [DecisionTreeClassifier() for i in range(100)]
     clfs = [RandomForestClassifier(n_estimators = 15) for i in range(80)]
