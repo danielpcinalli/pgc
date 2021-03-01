@@ -70,7 +70,7 @@ class Metodo_acuracia(_BaseHeterogeneousEnsemble):
             bestEstimator = sorted(estimatorsAccuracies, reverse = True, key = lambda accEst: accEst[0])[0]
             selectedEstimators = [bestEstimator]
 
-        accTotal = sum([acc for acc, _ in selectedEstimators])
+        accTotal = sum([acc for acc, _ in selectedEstimators]) + 0.0000001
 
         weightedEstimators = [(
             acc/accTotal,
@@ -140,7 +140,6 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
 
 
     def _voting(self, estimators, x):
-        votes = Counter()
 
         y_preds = [estimator.predict([x])[0] for estimator in estimators]
         return util.voting(y_preds)
