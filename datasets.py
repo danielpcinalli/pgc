@@ -19,6 +19,7 @@ FN_STATLOG_SAT_IMAGE_TR     = PATH_DATASETS + "statlog_sat_image/sat.trn"
 FN_STATLOG_SAT_IMAGE_TS     = PATH_DATASETS + "statlog_sat_image/sat.tst"
 
 
+
 def load_statlog_sattelite_image(format='np'):
     data1 = read_csv(FN_STATLOG_SAT_IMAGE_TR, sep = " ", header = None)
     data2 = read_csv(FN_STATLOG_SAT_IMAGE_TS, sep = " ", header = None)
@@ -158,3 +159,18 @@ def z_score_normalize(X):
         X.iloc[:, i] = (X.iloc[:, i] -X.iloc[:, i].mean())/X.iloc[:, i].std()
     return X
 
+loader_to_dataset_name_dict = {
+    load_accent_recognition.__name__ : 'Accent Recognition',
+    load_electrical_grid_stability.__name__ : 'Electrical Grid Stability',
+    load_gamma_telecope.__name__ : 'GAMMA Telescope',
+    load_htru_pulsar.__name__ : 'HTRU Pulsar',
+    load_image_segmentation.__name__ : 'Image Segmentation',
+    load_leaf.__name__ : 'Leaf',
+    load_pen_digit_recognition.__name__ : 'Pen Digit Recognition',
+    load_rice.__name__ : 'Rice',
+    load_statlog_sattelite_image.__name__ : 'Statlog Sattelite Image',
+    load_statlog_vehicle.__name__ : 'Statlog Vehicle',
+}
+
+def loader_to_dataset_name(loader):
+    return loader_to_dataset_name_dict[loader]

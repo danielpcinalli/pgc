@@ -17,9 +17,11 @@ from sklearn.naive_bayes import GaussianNB
 #from sklearn import cross_validation
 import sklearn
 import util
+import matplotlib.pyplot as plt
+import seaborn as sns
 from csv import writer
 from itertools import product
-from datasets import load_electrical_grid_stability, load_htru_pulsar, load_image_segmentation, load_rice, load_statlog_vehicle, load_gamma_telecope, load_pen_digit_recognition, load_leaf, load_accent_recognition, load_statlog_sattelite_image
+from datasets import load_electrical_grid_stability, load_htru_pulsar, load_image_segmentation, load_rice, load_statlog_vehicle, load_gamma_telecope, load_pen_digit_recognition, load_leaf, load_accent_recognition, load_statlog_sattelite_image, loader_to_dataset_name
 import time
 import numpy as np
 np.random.seed(0)
@@ -225,7 +227,49 @@ def getKnnEnsemble(n_clfs):
         clfs.append(clf)
     return clfs
 
+def analysis_similaridade():
+    # dataset,n_base_classifiers,n_objetos_gerados,qtde_classifiers,classifier_type,acc1,acc2,acc3,acc4,acc5,acc_mean,time_to_run
+    df_full = pd.read_csv(csv_file_name_similaridade)
+    datasets = df_full['dataset'].unique()
 
+    # grid 5 x 2
+    # para cada dataset, um gráfico de linha : x - qtdeClassificadores; y - acurácia
+
+    # d1 : 0,0 ; d2 : 0,1 ; d3 : 1,0; d4 : 1,1
+    x = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]
+    y = [0, 1] * 5
+    
+    fig = plt.figure(figsize=(10, 10))
+    gs = fig.add_gridspec(5, 2)
+    
+    for dataset, x, y in zip(datasets, x, y):
+        ax = fig.add_subplot(gs[x, y])
+        df = df_full[df_full['dataset'] == dataset]
+        sns.lineplot(data=df, x = 'qtde_classifiers', y='acc_mean', hue='classifier_type')
+    plt.show()
+
+def analysis_acuracia():
+    # dataset,n_base_classifiers,n_objetos_gerados,qtde_classifiers,classifier_type,acc1,acc2,acc3,acc4,acc5,acc_mean,time_to_run
+    df_full = pd.read_csv(csv_file_name_acuracia)
+    datasets = df_full['dataset'].unique()
+
+    # grid 5 x 2
+    # para cada dataset, um gráfico de linha : x - qtdeClassificadores; y - acurácia
+
+    
+    for dataset in datasets[:1]:
+        fig = plt.figure(figsize=(10, 5))
+        df = df_full[df_full['dataset'] == dataset]
+        g = sns.lineplot(data=df, x = 'acc_min', y='acc_mean', hue='classifier_type')
+
+        plt.title(f'Método de acurácia - {loader_to_dataset_name(dataset)}')
+        plt.xlabel('Acurácia mínima')
+        plt.ylabel('Acurácia média')
+        # plt.legend( loc=2, borderaxespad=0.)
+        # g.legend(loc='center left', bbox_to_anchor=(1.25, 0.5))
+        plt.show() 
 if __name__ == "__main__":
-    all_runs_similaridade()
-    all_runs_acuracia()
+    # all_runs_similaridade()
+    # all_runs_acuracia()
+    # analysis_similaridade()
+    analysis_acuracia()
