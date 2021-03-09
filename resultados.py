@@ -26,8 +26,10 @@ import time
 import numpy as np
 np.random.seed(0)
 import pandas as pd
+
 csv_file_name_similaridade = "resultados_similaridade.csv"
 csv_file_name_acuracia = "resultados_acuracia.csv"
+resultados_folder = "./resultados/"
 
 #csv com testes já realizados para evitar repetição
 df_testes_realizados_similaridade = pd.read_csv(csv_file_name_similaridade)
@@ -227,49 +229,85 @@ def getKnnEnsemble(n_clfs):
         clfs.append(clf)
     return clfs
 
+
 def analysis_similaridade():
-    # dataset,n_base_classifiers,n_objetos_gerados,qtde_classifiers,classifier_type,acc1,acc2,acc3,acc4,acc5,acc_mean,time_to_run
     df_full = pd.read_csv(csv_file_name_similaridade)
     datasets = df_full['dataset'].unique()
 
-    # grid 5 x 2
-    # para cada dataset, um gráfico de linha : x - qtdeClassificadores; y - acurácia
+    #cria figura com 10 subplots
+    fig, axs = plt.subplots(nrows=5, ncols=2, sharex=True, sharey=False, figsize=(10,10))
 
-    # d1 : 0,0 ; d2 : 0,1 ; d3 : 1,0; d4 : 1,1
-    x = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]
-    y = [0, 1] * 5
-    
-    fig = plt.figure(figsize=(10, 10))
-    gs = fig.add_gridspec(5, 2)
-    
-    for dataset, x, y in zip(datasets, x, y):
-        ax = fig.add_subplot(gs[x, y])
+    #cria uma ax que encompassa as outras menores, para colocar título e labels comuns
+    allax = fig.add_subplot(111, frameon=False)
+    plt.suptitle('Método da similaridade')
+    plt.xlabel('Quantidade de classificadores')
+    plt.ylabel('Acurácia média')
+    #deixa ticks transparentes (retirar faz com que labels fiquem acima do tick dos subplots)
+    plt.tick_params(axis='both', which='both',colors = '#0f0f0f00')
+
+    for dataset, ax in zip(datasets, axs.flatten()):
+        plt.sca(ax)
+
         df = df_full[df_full['dataset'] == dataset]
+        ds_name = loader_to_dataset_name(dataset)
+
         sns.lineplot(data=df, x = 'qtde_classifiers', y='acc_mean', hue='classifier_type')
-    plt.show()
+
+        #remove legenda e labels de cada subplot
+        ax.get_legend().remove()
+        ax.set_ylabel('')
+        ax.set_xlabel('')
+        #Título com nome do dataset
+        plt.title(ds_name)
+        
+    #Copia legenda do último ax iterado e coloca abaixo do gráfico
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol=5)
+    #conserta layout
+    plt.tight_layout()
+    
+    plt.savefig(resultados_folder + 'similaridade.png')
 
 def analysis_acuracia():
-    # dataset,n_base_classifiers,n_objetos_gerados,qtde_classifiers,classifier_type,acc1,acc2,acc3,acc4,acc5,acc_mean,time_to_run
     df_full = pd.read_csv(csv_file_name_acuracia)
     datasets = df_full['dataset'].unique()
 
-    # grid 5 x 2
-    # para cada dataset, um gráfico de linha : x - qtdeClassificadores; y - acurácia
+    #cria figura com 10 subplots
+    fig, axs = plt.subplots(nrows=5, ncols=2, sharex=True, sharey=False, figsize=(10,10))
 
-    
-    for dataset in datasets[:1]:
-        fig = plt.figure(figsize=(10, 5))
+    #cria uma ax que encompassa as outras menores, para colocar título e labels comuns
+    allax = fig.add_subplot(111, frameon=False)
+    plt.suptitle('Método da acurácia')
+    plt.xlabel('Acurácia mínima')
+    plt.ylabel('Acurácia média')
+    #deixa ticks transparentes (retirar faz com que labels fiquem acima do tick dos subplots)
+    plt.tick_params(axis='both', which='both',colors = '#0f0f0f00')
+
+    for dataset, ax in zip(datasets, axs.flatten()):
+        plt.sca(ax)
+
         df = df_full[df_full['dataset'] == dataset]
-        g = sns.lineplot(data=df, x = 'acc_min', y='acc_mean', hue='classifier_type')
+        ds_name = loader_to_dataset_name(dataset)
 
-        plt.title(f'Método de acurácia - {loader_to_dataset_name(dataset)}')
-        plt.xlabel('Acurácia mínima')
-        plt.ylabel('Acurácia média')
-        # plt.legend( loc=2, borderaxespad=0.)
-        # g.legend(loc='center left', bbox_to_anchor=(1.25, 0.5))
-        plt.show() 
+        sns.lineplot(data=df, x = 'acc_min', y='acc_mean', hue='classifier_type')
+
+        #remove legenda e labels de cada subplot
+        ax.get_legend().remove()
+        ax.set_ylabel('')
+        ax.set_xlabel('')
+        #Título com nome do dataset
+        plt.title(ds_name)
+        
+    #Copia legenda do último ax iterado e coloca abaixo do gráfico
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol=5)
+    #conserta layout
+    plt.tight_layout()
+    
+    plt.savefig(resultados_folder + 'acuracia.png')
+
 if __name__ == "__main__":
     # all_runs_similaridade()
     # all_runs_acuracia()
-    # analysis_similaridade()
+    analysis_similaridade()
     analysis_acuracia()
