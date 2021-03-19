@@ -2,10 +2,12 @@
 
 from sklearn.ensemble._base import _BaseHeterogeneousEnsemble
 from sklearn.metrics import accuracy_score
+from sklearn.metrics.pairwise import euclidean_distances
 from math import sqrt
 import numpy as np
 import util
 from collections import Counter
+
 
 class Metodo_acuracia(_BaseHeterogeneousEnsemble):
     def __init__(self, estimators, numObjects, accMin):
@@ -22,7 +24,8 @@ class Metodo_acuracia(_BaseHeterogeneousEnsemble):
     def fit(self, X, y):
         self.setKnownObjects(X, y)
         for estimator in self.estimators:
-            estimator.fit(X, y)
+            bag_X, bag_y = util.bagging(X, y)
+            estimator.fit(bag_X, bag_y)
 
     def predict(self, X):
         if self.numObjects == len(self.base):
@@ -55,7 +58,7 @@ class Metodo_acuracia(_BaseHeterogeneousEnsemble):
         """Recebe um objeto x
            Retorna lista de tuplas (peso, estimador)
         """
-        X, y_real = zip(*self._getNearbyPoints(x))
+        X, y_real = zip(*self._getNearbyPoints(np.array([x])))
 
         estimatorsAccuracies = [(
             accuracy_score(y_real, estimator.predict(X)),
@@ -84,13 +87,16 @@ class Metodo_acuracia(_BaseHeterogeneousEnsemble):
            Retorna objetos  de self.base mais próximos de x
         """
 
-        pointsSortedByDistance = sorted(self.base, key= lambda obj: self._distance(obj[0], x))
+        objs = [obj[0] for obj in self.base]
+        distances = euclidean_distances(objs, x)
 
-        return pointsSortedByDistance[:self.numObjects]
+        idxs = util.getKSmallestIndexes(distances.flatten(), self.numObjects)
+        closestObjects = util.getIndexedList(self.base, idxs)
 
-    def _distance(self, obj1, obj2):
-        """Recebe dois objetos e retorna distância euclidiana entre estes"""
-        return sqrt(sum([(x - y)**2 for x, y in zip(obj1, obj2)]))
+        return closestObjects
+
+
+        
 
 class Metodo_similaridade(_BaseHeterogeneousEnsemble):
     def __init__(self, estimators, numObjects, qtdeClassificadores):
@@ -102,9 +108,9 @@ class Metodo_similaridade(_BaseHeterogeneousEnsemble):
 
         #usando desvio padrão para usar np.random.normal
         self.sigmas = [sqrt(np.var(column)/10) for column in X.T]
-
         for estimator in self.estimators:
-            estimator.fit(X, y)
+            bag_X, bag_y = util.bagging(X, y)
+            estimator.fit(bag_X, bag_y)
 
     def predict(self, X):
         if self.qtdeClassificadores == len(self.estimators):
