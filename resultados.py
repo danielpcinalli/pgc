@@ -27,6 +27,8 @@ import numpy as np
 np.random.seed(0)
 import pandas as pd
 
+
+
 csv_file_name_similaridade = "resultados_similaridade.csv"
 csv_file_name_acuracia = "resultados_acuracia.csv"
 resultados_folder = "./resultados/"
@@ -38,12 +40,12 @@ df_testes_realizados_similaridade = df_testes_realizados_similaridade.iloc[:, 0:
 df_testes_realizados_acuracia = pd.read_csv(csv_file_name_acuracia)
 df_testes_realizados_acuracia = df_testes_realizados_acuracia.iloc[:, 0:5]
 
-N_BASE_CLASSIFIERS = 100
+N_BASE_CLASSIFIERS = 20
 
 def isOnDataframe(df, row):
     return (df == row).all(1).any()
 
-def run_similarity(numObjetosGerados, classifierType, load_dataset_function, qtdeClassificadores):
+def run_similarity(numObjetosGerados, classifierType, load_dataset_function, qtdeClassificadores, save_to_csv=True):
     startTime = time.time()
 
     X, y = load_dataset_function()
@@ -75,14 +77,15 @@ def run_similarity(numObjetosGerados, classifierType, load_dataset_function, qtd
     csvRow.append(np.mean(accuracies))
     endTime = time.time()
     csvRow.append(endTime - startTime)
-    with open(csv_file_name_similaridade, 'a+', newline='') as write_obj:
-        csv_writer = writer(write_obj)
-        csv_writer.writerow(csvRow)
+    if save_to_csv:
+        with open(csv_file_name_similaridade, 'a+', newline='') as write_obj:
+            csv_writer = writer(write_obj)
+            csv_writer.writerow(csvRow)
 
     print(csvRow)
     print(f"Time to run: {endTime - startTime}")
 
-def run_acuracia(numPontosProximos, accMin, classifierType, load_dataset_function):
+def run_acuracia(numPontosProximos, accMin, classifierType, load_dataset_function, save_to_csv=True):
     startTime = time.time()
 
     X, y = load_dataset_function()
@@ -115,9 +118,11 @@ def run_acuracia(numPontosProximos, accMin, classifierType, load_dataset_functio
     csvRow.append(np.mean(accuracies))
     endTime = time.time()
     csvRow.append(endTime - startTime)
-    with open(csv_file_name_acuracia, 'a+', newline='') as write_obj:
-        csv_writer = writer(write_obj)
-        csv_writer.writerow(csvRow)
+
+    if save_to_csv:
+        with open(csv_file_name_acuracia, 'a+', newline='') as write_obj:
+            csv_writer = writer(write_obj)
+            csv_writer.writerow(csvRow)
 
     print(csvRow)
     print(f"Time to run: {endTime - startTime}")
@@ -128,7 +133,8 @@ def all_runs_acuracia():
     numPontosProximos_list = [10]
     classifierTypes = ['tree', 'perceptron', 'naive-bayes', 'knn', 'mix']
     loaders = [load_electrical_grid_stability, load_htru_pulsar, load_image_segmentation, load_rice, load_statlog_vehicle, load_gamma_telecope, load_pen_digit_recognition, load_leaf, load_accent_recognition, load_statlog_sattelite_image]
-    accMin_list = [.5, .75, .9]
+    accMin_list = [0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5 ,
+       0.55, 0.6 ,0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.]
 
     all_combinations = product(
         numPontosProximos_list,
@@ -161,15 +167,16 @@ def all_runs_similaridade():
     numObjetosGerados_list = [10]
     classifierTypes = ['tree', 'perceptron', 'naive-bayes', 'knn', 'mix']
     loaders = [load_electrical_grid_stability, load_htru_pulsar, load_image_segmentation, load_rice, load_statlog_vehicle, load_gamma_telecope, load_pen_digit_recognition, load_leaf, load_accent_recognition, load_statlog_sattelite_image]
-    qtdeClassificadores_list = [5, 10, 50, 100]
-
+    qtdeClassificadoresPct_list = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5 ,
+       0.55, 0.6 ,0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.]
     all_combinations = product(
         numObjetosGerados_list,
         classifierTypes,
         loaders,
-        qtdeClassificadores_list
+        qtdeClassificadoresPct_list
     )
-    for numObjGerados, clfType, loader, qtdClfs in all_combinations:
+    for numObjGerados, clfType, loader, qtdClfsPct in all_combinations:
+        qtdClfs = int(qtdClfsPct * N_BASE_CLASSIFIERS)
         row = [loader.__name__, N_BASE_CLASSIFIERS, numObjGerados, qtdClfs, clfType]
         if (isOnDataframe(df_testes_realizados_similaridade, row)):
             print(f"Already tested: {numObjGerados}, {N_BASE_CLASSIFIERS}, {clfType}, {loader.__name__}, {qtdClfs}")
@@ -183,6 +190,7 @@ def all_runs_similaridade():
             quit()
         except:
             print(f"Failed to run {loader.__name__} with {clfType}")
+            traceback.print_exc()
             continue
 
     endTime = time.time()
@@ -202,13 +210,13 @@ def getEnsemble(classifier, n_clfs):
     return clfs
 
 def getNBEnsemble(n_clfs):
-    return [GaussianNB(var_smoothing = .00000001 * np.sqrt(i + 1)) for i in range(n_clfs)]
+    return [GaussianNB(var_smoothing = np.random.uniform(1e-10, 1e-8)) for i in range(n_clfs)]
 
 def getPerceptronEnsemble(n_clfs):
-    return [Perceptron(penalty = 'l2', alpha = 0.0001 * np.sqrt(i + 1) ) for i in range(n_clfs)]
+    return [Perceptron(penalty = 'l2', alpha = np.random.uniform(0., .1) ) for i in range(n_clfs)]
 
 def getDecisionTreeEnsemble(n_clfs):
-    return [DecisionTreeClassifier() for i in range(n_clfs)]
+    return [DecisionTreeClassifier(splitter='random') for i in range(n_clfs)]
 
 def getMixedEnsemble(n_clfs):
     clfs = []
@@ -229,85 +237,100 @@ def getKnnEnsemble(n_clfs):
         clfs.append(clf)
     return clfs
 
-
 def analysis_similaridade():
     df_full = pd.read_csv(csv_file_name_similaridade)
     datasets = df_full['dataset'].unique()
+    classifiers = df_full['classifier_type'].unique()
 
-    #cria figura com 10 subplots
-    fig, axs = plt.subplots(nrows=5, ncols=2, sharex=True, sharey=False, figsize=(10,10))
+    df_full = df_full.drop(['acc_mean', 'time_to_run'], axis = 1)
 
-    #cria uma ax que encompassa as outras menores, para colocar título e labels comuns
-    allax = fig.add_subplot(111, frameon=False)
-    plt.suptitle('Método da similaridade')
-    plt.xlabel('Quantidade de classificadores')
-    plt.ylabel('Acurácia média')
-    #deixa ticks transparentes (retirar faz com que labels fiquem acima do tick dos subplots)
-    plt.tick_params(axis='both', which='both',colors = '#0f0f0f00')
+    df_full = df_full.melt(id_vars=['dataset', 'n_base_classifiers', 'n_objetos_gerados', 'qtde_classifiers', 'classifier_type'], var_name='kfold', value_name='acc')
 
-    for dataset, ax in zip(datasets, axs.flatten()):
-        plt.sca(ax)
+    for classifier in classifiers:
+        #cria figura com 10 subplots
+        fig, axs = plt.subplots(nrows=5, ncols=2, sharex=True, sharey=False, figsize=(10,10))
 
-        df = df_full[df_full['dataset'] == dataset]
-        ds_name = loader_to_dataset_name(dataset)
+        #cria uma ax que encompassa as outras menores, para colocar título e labels comuns
+        allax = fig.add_subplot(111, frameon=False)
+        plt.ylabel('')
+        plt.xlabel('Quantidade de classificadores')
+        #deixa ticks transparentes (retirar faz com que labels fiquem acima do tick dos subplots)
+        plt.tick_params(axis='both', which='both',colors = '#0f0f0f00')
 
-        sns.lineplot(data=df, x = 'qtde_classifiers', y='acc_mean', hue='classifier_type')
+        df_per_clf = df_full[df_full['classifier_type'] == classifier]
+        plt.suptitle(f'Método da similaridade - {classifier}')
 
-        #remove legenda e labels de cada subplot
-        ax.get_legend().remove()
-        ax.set_ylabel('')
-        ax.set_xlabel('')
-        #Título com nome do dataset
-        plt.title(ds_name)
+        for dataset, ax in zip(datasets, axs.flatten()):
+            plt.sca(ax)
+
+            df = df_per_clf[df_per_clf['dataset'] == dataset]
+            ds_name = loader_to_dataset_name(dataset)
+
+            sns.boxplot(data=df, x='qtde_classifiers', y='acc', palette='colorblind')
+
+            #remove legenda e labels de cada subplot
+            # ax.get_legend().remove()
+            ax.set_ylabel('')
+            ax.set_xlabel('')
+            #Título com nome do dataset
+            plt.title(ds_name)
+            
+        #Copia legenda do último ax iterado e coloca abaixo do gráfico
+        handles, labels = ax.get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower center', ncol=5)
+        #conserta layout
+        plt.tight_layout()
         
-    #Copia legenda do último ax iterado e coloca abaixo do gráfico
-    handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', ncol=5)
-    #conserta layout
-    plt.tight_layout()
-    
-    plt.savefig(resultados_folder + 'similaridade.png')
+        plt.savefig(resultados_folder + f'similaridade-{classifier}.png')
 
 def analysis_acuracia():
     df_full = pd.read_csv(csv_file_name_acuracia)
     datasets = df_full['dataset'].unique()
+    classifiers = df_full['classifier_type'].unique()
 
-    #cria figura com 10 subplots
-    fig, axs = plt.subplots(nrows=5, ncols=2, sharex=True, sharey=False, figsize=(10,10))
+    df_full = df_full.drop(['acc_mean', 'time_to_run'], axis = 1)
 
-    #cria uma ax que encompassa as outras menores, para colocar título e labels comuns
-    allax = fig.add_subplot(111, frameon=False)
-    plt.suptitle('Método da acurácia')
-    plt.xlabel('Acurácia mínima')
-    plt.ylabel('Acurácia média')
-    #deixa ticks transparentes (retirar faz com que labels fiquem acima do tick dos subplots)
-    plt.tick_params(axis='both', which='both',colors = '#0f0f0f00')
+    df_full = df_full.melt(id_vars=['dataset','n_base_classifiers','n_pontos_proximos','acc_min','classifier_type'], var_name='kfold', value_name='acc')
 
-    for dataset, ax in zip(datasets, axs.flatten()):
-        plt.sca(ax)
+    for classifier in classifiers:    
+        #cria figura com 10 subplots
+        fig, axs = plt.subplots(nrows=5, ncols=2, sharex=True, sharey=False, figsize=(10,10))
 
-        df = df_full[df_full['dataset'] == dataset]
-        ds_name = loader_to_dataset_name(dataset)
-
-        sns.lineplot(data=df, x = 'acc_min', y='acc_mean', hue='classifier_type')
-
-        #remove legenda e labels de cada subplot
-        ax.get_legend().remove()
-        ax.set_ylabel('')
-        ax.set_xlabel('')
-        #Título com nome do dataset
-        plt.title(ds_name)
+        #cria uma ax que encompassa as outras menores, para colocar título e labels comuns
+        allax = fig.add_subplot(111, frameon=False)
+        plt.xlabel('Acurácia mínima')
+        plt.ylabel('')
+        #deixa ticks transparentes (retirar faz com que labels fiquem acima do tick dos subplots)
+        plt.tick_params(axis='both', which='both',colors = '#0f0f0f00')
         
-    #Copia legenda do último ax iterado e coloca abaixo do gráfico
-    handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', ncol=5)
-    #conserta layout
-    plt.tight_layout()
-    
-    plt.savefig(resultados_folder + 'acuracia.png')
+        df_per_clf = df_full[df_full['classifier_type'] == classifier]
+        plt.suptitle(f'Método da acurácia - {classifier}')
+
+        for dataset, ax in zip(datasets, axs.flatten()):
+            plt.sca(ax)
+
+            df = df_per_clf[df_per_clf['dataset'] == dataset]
+            ds_name = loader_to_dataset_name(dataset)
+
+            sns.boxplot(data=df,  y='acc', x='acc_min', palette='colorblind')
+
+            #remove legenda e labels de cada subplot
+            # ax.get_legend().remove()
+            ax.set_ylabel('')
+            ax.set_xlabel('')
+            #Título com nome do dataset
+            plt.title(ds_name)
+            
+        #Copia legenda do último ax iterado e coloca abaixo do gráfico
+        handles, labels = ax.get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower center', ncol=5)
+        #conserta layout
+        plt.tight_layout()
+
+        plt.savefig(resultados_folder + f'acuracia-{classifier}.png')
 
 if __name__ == "__main__":
-    # all_runs_similaridade()
     # all_runs_acuracia()
-    analysis_similaridade()
+    # all_runs_similaridade()
     analysis_acuracia()
+    analysis_similaridade()
