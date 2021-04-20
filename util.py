@@ -2,6 +2,7 @@ from collections import Counter
 import numpy as np
 from operator import itemgetter
 import math
+
 def weightedVoting(weight_votes):
     """Recebe lista de tuplas (peso, voto)"""
     counter = Counter()

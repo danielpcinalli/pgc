@@ -27,7 +27,7 @@ import numpy as np
 np.random.seed(0)
 import pandas as pd
 
-
+from scipy.stats import friedmanchisquare
 
 csv_file_name_similaridade = "resultados_similaridade.csv"
 csv_file_name_acuracia = "resultados_acuracia.csv"
@@ -329,8 +329,35 @@ def analysis_acuracia():
 
         plt.savefig(resultados_folder + f'acuracia-{classifier}.png')
 
+def friedman_test():
+    df_acc = pd.read_csv(csv_file_name_acuracia)
+    df_sim = pd.read_csv(csv_file_name_similaridade)
+
+    #renomeia dataframes para que possam ser concatenados
+    df_acc = df_acc[['acc_min', 'classifier_type', 'dataset', 'acc_mean']].rename(columns={'acc_min': 'parametro', 'acc_mean': 'measurement'})
+    df_sim = df_sim[['qtde_classifiers', 'classifier_type', 'dataset', 'acc_mean']].rename(columns={'qtde_classifiers': 'parametro', 'acc_mean': 'measurement'})
+    df_acc['metodo'] = 'acuracia'
+    df_sim['metodo'] = 'similaridade'
+
+    #concatena os dataframes
+    df_all = pd.concat([df_acc, df_sim])
+
+    #transforma metodo, classifier_type e parametro em uma coluna só
+    df_all = df_all.astype({'parametro': str})
+    df_all = df_all.set_index(keys=['metodo', 'classifier_type', 'parametro'])
+    df_all.index = df_all.index.map('-'.join)
+    df_all.reset_index(inplace=True)
+
+    #cada algoritmo diferente vira uma coluna, cada linha corresponde a um dataset, e os valores são a acurácia
+    df_all = df_all.pivot(index='dataset', columns='index', values='measurement')
+
+    #teste de friedman    
+    statistic, pvalue = friedmanchisquare(*df_all.values.tolist())
+    print(f'p-value={pvalue}')
+
 if __name__ == "__main__":
     # all_runs_acuracia()
     # all_runs_similaridade()
-    analysis_acuracia()
-    analysis_similaridade()
+    # analysis_acuracia()
+    # analysis_similaridade()
+    friedman_test()
