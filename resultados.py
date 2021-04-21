@@ -28,6 +28,7 @@ np.random.seed(0)
 import pandas as pd
 
 from scipy.stats import friedmanchisquare
+from scikit_posthocs import posthoc_nemenyi_friedman
 
 csv_file_name_similaridade = "resultados_similaridade.csv"
 csv_file_name_acuracia = "resultados_acuracia.csv"
@@ -342,18 +343,26 @@ def friedman_test():
     #concatena os dataframes
     df_all = pd.concat([df_acc, df_sim])
 
+    
+
     #transforma metodo, classifier_type e parametro em uma coluna só
     df_all = df_all.astype({'parametro': str})
     df_all = df_all.set_index(keys=['metodo', 'classifier_type', 'parametro'])
     df_all.index = df_all.index.map('-'.join)
     df_all.reset_index(inplace=True)
 
+
     #cada algoritmo diferente vira uma coluna, cada linha corresponde a um dataset, e os valores são a acurácia
-    df_all = df_all.pivot(index='dataset', columns='index', values='measurement')
+    df_all_pivoted = df_all.pivot(index='dataset', columns='index', values='measurement')
 
     #teste de friedman    
-    statistic, pvalue = friedmanchisquare(*df_all.values.tolist())
+    statistic, pvalue = friedmanchisquare(*df_all_pivoted.values.tolist())
     print(f'p-value={pvalue}')
+
+    #teste de nemenyi
+    nemenyi = posthoc_nemenyi_friedman(df_all, melted=True, group_col='index', block_col='dataset', y_col='measurement')
+
+    nemenyi.to_csv('resultado_nemenyi.csv')
 
 if __name__ == "__main__":
     # all_runs_acuracia()
