@@ -27,7 +27,7 @@ import numpy as np
 np.random.seed(0)
 import pandas as pd
 
-from scipy.stats import friedmanchisquare
+from scipy.stats import friedmanchisquare, rankdata
 from scikit_posthocs import posthoc_nemenyi_friedman
 
 csv_file_name_similaridade = "resultados_similaridade.csv"
@@ -364,9 +364,96 @@ def friedman_test():
 
     nemenyi.to_csv('resultado_nemenyi.csv')
 
+def rank_acuracia():
+    df = pd.read_csv(csv_file_name_acuracia)
+    df = df.rename(columns={'acc_min': 'parametro'})
+    rank(df, 'acuracia')
+
+def rank_similaridade():
+    df = pd.read_csv(csv_file_name_similaridade)
+    df = df.rename(columns={'qtde_classifiers': 'parametro'})
+    rank(df, 'similaridade')
+
+def rank(df_original, metodo):
+    df_original = df_original[['parametro', 'classifier_type', 'dataset', 'acc_mean']]
+
+    #transforma metodo, classifier_type e parametro em uma coluna só
+    df = df_original.astype({'parametro': str})
+    df = df.set_index(keys=['classifier_type', 'parametro'])
+    df.index = df.index.map('-'.join)
+    df.reset_index(inplace=True)
+
+    df_pivoted = df.pivot(index='dataset', columns='index', values='acc_mean')
+
+    #ranks (tipo de classificador, quantidade de classificadores)
+    ranks = pd.DataFrame(rankdata(df_pivoted, axis=1), index=df_pivoted.index, columns=df_pivoted.columns)
+    ranks = ranks.mean(axis=0).sort_values()
+    ranks.to_csv(f'ranks_{metodo}.csv')
+
+    #ranks (quantidade de classificadores)
+    df = df_original.groupby(by = ['parametro', 'dataset']).mean()
+    df.reset_index(inplace=True)
+    df_pivoted = df.pivot(index='dataset', columns='parametro', values='acc_mean')
+    ranks = pd.DataFrame(rankdata(df_pivoted, axis=1), index=df_pivoted.index, columns=df_pivoted.columns)
+    ranks = ranks.mean(axis=0).sort_values()
+    ranks.to_csv(f'ranks_{metodo}_por_parametro.csv')
+
+
+def friedman_test_similaridade():
+    df = pd.read_csv(csv_file_name_similaridade)
+    df = df[['qtde_classifiers', 'classifier_type', 'dataset', 'acc_mean']]
+
+    #transforma metodo, classifier_type e parametro em uma coluna só
+    df = df.astype({'qtde_classifiers': str})
+    df = df.set_index(keys=['classifier_type', 'qtde_classifiers'])
+    df.index = df.index.map('-'.join)
+    df.reset_index(inplace=True)
+
+
+    #teste de friedman    
+    df_pivoted = df.pivot(index='dataset', columns='index', values='acc_mean')
+    statistic, pvalue = friedmanchisquare(*df_pivoted.values.tolist())
+    print(f'p-value={pvalue}')
+
+    #ranks
+    ranks = pd.DataFrame(rankdata(df_pivoted, axis=1), index=df_pivoted.index, columns=df_pivoted.columns)
+    ranks = ranks.mean(axis=0).sort_values()
+    ranks.to_csv('ranks_similaridade')
+
+    
+
+    #teste de nemenyi
+    nemenyi = posthoc_nemenyi_friedman(df, melted=True, group_col='index', block_col='dataset', y_col='acc_mean')
+
+    nemenyi.to_csv('resultado_nemenyi_similaridade.csv')
+
+def friedman_test_acuracia():
+    df = pd.read_csv(csv_file_name_acuracia)
+    df = df[['acc_min', 'classifier_type', 'dataset', 'acc_mean']]
+
+    #transforma metodo, classifier_type e parametro em uma coluna só
+    df = df.astype({'acc_min': str})
+    df = df.set_index(keys=['classifier_type', 'acc_min'])
+    df.index = df.index.map('-'.join)
+    df.reset_index(inplace=True)
+
+    #teste de friedman    
+    df_pivoted = df.pivot(index='dataset', columns='index', values='acc_mean')
+    statistic, pvalue = friedmanchisquare(*df_pivoted.values.tolist())
+    print(f'p-value={pvalue}')
+
+    #teste de nemenyi
+    nemenyi = posthoc_nemenyi_friedman(df, melted=True, group_col='index', block_col='dataset', y_col='acc_mean')
+
+    nemenyi.to_csv('resultado_nemenyi_acuracia.csv')
+
 if __name__ == "__main__":
     # all_runs_acuracia()
     # all_runs_similaridade()
     # analysis_acuracia()
     # analysis_similaridade()
-    friedman_test()
+    # friedman_test()
+    # friedman_test_similaridade()
+    # friedman_test_acuracia()
+    rank_similaridade()
+    rank_acuracia()
