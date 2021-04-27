@@ -2,6 +2,8 @@ from collections import Counter
 import numpy as np
 from operator import itemgetter
 import math
+from scipy.stats import rankdata
+import pandas as pd
 
 def weightedVoting(weight_votes):
     """Recebe lista de tuplas (peso, voto)"""
@@ -51,3 +53,13 @@ def getIndexedList(x, idxs):
 
 def distance(obj1, obj2):
     return math.sqrt(sum([(x - y)**2 for x, y in zip(obj1, obj2)]))
+
+def rank_accuracy(df):
+    """
+    df: dataframe em que cada coluna é um algoritmo e cada índice um dataset, valores são acurácias
+    Retorna dataframe com ranks
+    """
+    #rankdata considera menor valor como maior rank, portanto é necessário multiplicar por -1 as acurácias
+    df = -1 * df
+    ranks = pd.DataFrame(rankdata(df, axis=1), index=df.index, columns=df.columns)
+    return ranks

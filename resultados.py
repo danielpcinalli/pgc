@@ -385,17 +385,17 @@ def rank(df_original, metodo):
 
     df_pivoted = df.pivot(index='dataset', columns='index', values='acc_mean')
 
-    #ranks (tipo de classificador, quantidade de classificadores)
-    ranks = pd.DataFrame(rankdata(df_pivoted, axis=1), index=df_pivoted.index, columns=df_pivoted.columns)
-    ranks = ranks.mean(axis=0).sort_values()
+    #ranks (tipo de classificador, parametro)
+    ranks = util.rank_accuracy(df_pivoted)
+    ranks = ranks.mean(axis=0).sort_values()#rank médio
     ranks.to_csv(f'ranks_{metodo}.csv')
 
-    #ranks (quantidade de classificadores)
+    #ranks (parametro)
     df = df_original.groupby(by = ['parametro', 'dataset']).mean()
     df.reset_index(inplace=True)
     df_pivoted = df.pivot(index='dataset', columns='parametro', values='acc_mean')
-    ranks = pd.DataFrame(rankdata(df_pivoted, axis=1), index=df_pivoted.index, columns=df_pivoted.columns)
-    ranks = ranks.mean(axis=0).sort_values()
+    ranks = util.rank_accuracy(df_pivoted)
+    ranks = ranks.mean(axis=0).sort_values()#rank médio
     ranks.to_csv(f'ranks_{metodo}_por_parametro.csv')
 
 
@@ -409,18 +409,10 @@ def friedman_test_similaridade():
     df.index = df.index.map('-'.join)
     df.reset_index(inplace=True)
 
-
     #teste de friedman    
     df_pivoted = df.pivot(index='dataset', columns='index', values='acc_mean')
     statistic, pvalue = friedmanchisquare(*df_pivoted.values.tolist())
     print(f'p-value={pvalue}')
-
-    #ranks
-    ranks = pd.DataFrame(rankdata(df_pivoted, axis=1), index=df_pivoted.index, columns=df_pivoted.columns)
-    ranks = ranks.mean(axis=0).sort_values()
-    ranks.to_csv('ranks_similaridade')
-
-    
 
     #teste de nemenyi
     nemenyi = posthoc_nemenyi_friedman(df, melted=True, group_col='index', block_col='dataset', y_col='acc_mean')
