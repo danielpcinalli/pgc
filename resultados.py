@@ -43,6 +43,8 @@ df_testes_realizados_acuracia = df_testes_realizados_acuracia.iloc[:, 0:5]
 
 N_BASE_CLASSIFIERS = 20
 
+MIN_Y_AXIS_DELTA = .05
+
 def isOnDataframe(df, row):
     return (df == row).all(1).any()
 
@@ -315,6 +317,15 @@ def analysis_acuracia():
 
             sns.boxplot(data=df,  y='acc', x='acc_min', palette='colorblind')
 
+            #diminui quantidade de valores escritos no eixo x
+            plt.locator_params(axis='x', nbins=5)
+
+            ymin, ymax = ax.get_ylim()
+            y_delta = ymax-ymin
+            if y_delta < MIN_Y_AXIS_DELTA:
+                y_diff = (MIN_Y_AXIS_DELTA - y_delta) / 2
+                plt.ylim([ymin - y_diff, ymax + y_diff])
+
             #remove legenda e labels de cada subplot
             # ax.get_legend().remove()
             ax.set_ylabel('')
@@ -380,7 +391,7 @@ def rank(df_original, metodo):
     #transforma metodo, classifier_type e parametro em uma coluna só
     df = df_original.astype({'parametro': str})
     df = df.set_index(keys=['classifier_type', 'parametro'])
-    df.index = df.index.map('-'.join)
+    df.index = df.index.map('_'.join)
     df.reset_index(inplace=True)
 
     df_pivoted = df.pivot(index='dataset', columns='index', values='acc_mean')
@@ -388,6 +399,7 @@ def rank(df_original, metodo):
     #ranks (tipo de classificador, parametro)
     ranks = util.rank_accuracy(df_pivoted)
     ranks = ranks.mean(axis=0).sort_values()#rank médio
+    ranks = ranks.rename('rank')
     ranks.to_csv(f'ranks_{metodo}.csv')
 
     #ranks (parametro)
@@ -439,6 +451,31 @@ def friedman_test_acuracia():
 
     nemenyi.to_csv('resultado_nemenyi_acuracia.csv')
 
+def scatterplot_rank_analysis():
+    df = pd.read_csv('ranks_similaridade.csv')
+    df[['classifier_type', 'parametro']] = df['index'].str.split('_', 1, expand=True)
+    df = df.drop('index', axis=1)
+    df = df.astype({'parametro': 'int'})
+    sns.lmplot(data=df, x='parametro', y='rank', hue='classifier_type', palette='colorblind', legend=False)
+    plt.locator_params(axis='x', nbins=10)
+    plt.xlabel('Quantidade de classificadores')
+    plt.ylabel('Rank')
+    plt.legend(loc='upper center',bbox_to_anchor=(.5, 1.1), ncol=5)
+    plt.savefig('scatterplot_rank_similaridade.png', bbox_inches='tight')
+    
+    plt.clf()
+
+    df = pd.read_csv('ranks_acuracia.csv')
+    df[['classifier_type', 'parametro']] = df['index'].str.split('_', 1, expand=True)
+    df = df.drop('index', axis=1)
+    df = df.astype({'parametro': 'float'})
+    sns.lmplot(data=df, x='parametro', y='rank', hue='classifier_type', palette='colorblind', legend=False)
+    plt.locator_params(axis='x', nbins=10)
+    plt.xlabel('Acurácia mínima')
+    plt.ylabel('Rank')
+    plt.legend(loc='upper center',bbox_to_anchor=(.5, 1.1), ncol=5)
+    plt.savefig('scatterplot_rank_acuracia.png', bbox_inches='tight')
+
 if __name__ == "__main__":
     # all_runs_acuracia()
     # all_runs_similaridade()
@@ -447,5 +484,7 @@ if __name__ == "__main__":
     # friedman_test()
     # friedman_test_similaridade()
     # friedman_test_acuracia()
-    rank_similaridade()
-    rank_acuracia()
+    # rank_similaridade()
+    # rank_acuracia()
+    scatterplot_rank_analysis()
+    

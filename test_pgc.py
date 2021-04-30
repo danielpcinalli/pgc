@@ -59,12 +59,6 @@ def test_getNearbyPoints():
     
     assert nearest == macc._getNearbyPoints(x)
     
-def test_distance():
-
-    macc = Metodo_acuracia(0, 0, 0)
-    x = [1, 1, 1]
-    y = [2, 1, 0]
-    assert sqrt(2) == macc._distance(x, y)
     
 def test_getKSmallestIndexes():
     x = [1, 1, 10, 5, 2, 7, 8, 9, 2]
