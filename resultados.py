@@ -418,7 +418,7 @@ def friedman_test_similaridade():
     #transforma metodo, classifier_type e parametro em uma coluna só
     df = df.astype({'qtde_classifiers': str})
     df = df.set_index(keys=['classifier_type', 'qtde_classifiers'])
-    df.index = df.index.map('-'.join)
+    df.index = df.index.map('_'.join)
     df.reset_index(inplace=True)
 
     #teste de friedman    
@@ -438,7 +438,7 @@ def friedman_test_acuracia():
     #transforma metodo, classifier_type e parametro em uma coluna só
     df = df.astype({'acc_min': str})
     df = df.set_index(keys=['classifier_type', 'acc_min'])
-    df.index = df.index.map('-'.join)
+    df.index = df.index.map('_'.join)
     df.reset_index(inplace=True)
 
     #teste de friedman    
@@ -476,6 +476,19 @@ def scatterplot_rank_analysis():
     plt.legend(loc='upper center',bbox_to_anchor=(.5, 1.1), ncol=5)
     plt.savefig('scatterplot_rank_acuracia.png', bbox_inches='tight')
 
+def cd_diagram():
+    f_nemenyi = "resultado_nemenyi_similaridade.csv"
+    f_ranks = "ranks_similaridade.csv"
+    nemenyi = pd.read_csv(f_nemenyi, index_col=0)
+    ranks = pd.read_csv(f_ranks, index_col=0)
+
+    #filtra para um tipo de classificador
+    clf_type = 'tree'
+    ranks = ranks.filter(like=clf_type, axis=0)
+    nemenyi = nemenyi.filter(like=clf_type, axis=0)
+    nemenyi = nemenyi.filter(like=clf_type, axis=1)
+
+
 if __name__ == "__main__":
     # all_runs_acuracia()
     # all_runs_similaridade()
@@ -486,5 +499,5 @@ if __name__ == "__main__":
     # friedman_test_acuracia()
     # rank_similaridade()
     # rank_acuracia()
-    scatterplot_rank_analysis()
-    
+    # scatterplot_rank_analysis()
+    cd_diagram()
