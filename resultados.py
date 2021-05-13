@@ -483,11 +483,54 @@ def cd_diagram():
     ranks = pd.read_csv(f_ranks, index_col=0)
 
     #filtra para um tipo de classificador
-    clf_type = 'tree'
-    ranks = ranks.filter(like=clf_type, axis=0)
-    nemenyi = nemenyi.filter(like=clf_type, axis=0)
-    nemenyi = nemenyi.filter(like=clf_type, axis=1)
+    clfs_to_compare = ['tree_1', 'tree_20', 'naive-bayes_1', 'naive-bayes_20', 'perceptron_1', 'perceptron_20', 'mix_1', 'mix_20', 'knn_1', 'knn_20']
 
+    nemenyi = nemenyi.loc[clfs_to_compare, clfs_to_compare]
+
+    #Critical difference
+    cd = get_cd(q = 7.396 / np.sqrt(2), N = 10, k = 100)
+
+    #posições onde serão colocados os textos na figura
+    positions = [(0, .5), (0, .4), (0, .3), (0, .2), (0, .1), (1, .1), (1, .2), (1, .3), (1, .4), (1, .5), ]
+
+    #coloca ranks na ordem certa para combinar com positions
+    ranks = ranks.loc[clfs_to_compare]
+    ranks = ranks.sort_values(by='rank', ascending=False)
+    
+    #prepara imagem
+    fig, ax = plt.subplots(figsize=(7,4))
+    plt.subplots_adjust(left=0.2, right=0.8)
+    limits=(85, 1)
+    ax.set_xlim(limits)
+    ax.set_ylim(0, 1)
+    ax.spines['top'].set_position(('axes', .6))
+    ax.xaxis.set_ticks_position('top')
+    ax.yaxis.set_visible(False)
+    for pos in ['bottom', 'left', 'right']:
+        ax.spines[pos].set_visible(False)
+
+    #plota barra de CD
+    ax.plot([limits[0],limits[0]-cd], [.9,.9], color="k")
+    ax.plot([limits[0],limits[0]], [.9-0.03,.9+0.03], color="k")
+    ax.plot([limits[0]-cd,limits[0]-cd], [.9-0.03,.9+0.03], color="k") 
+    ax.text(limits[0]-cd/2., 0.92, "CD", ha="center", va="bottom") 
+
+    #plota gráfico
+    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+    arrowprops=dict(arrowstyle="-",connectionstyle="angle,angleA=0,angleB=90")
+    kw = dict(xycoords='data',textcoords="axes fraction",
+          arrowprops=arrowprops, bbox=bbox_props, va="center")
+    for clf, pos in zip(ranks.index.tolist(), positions):
+        clf_x = ranks.loc[clf]
+        ax.annotate(clf, xy=(clf_x, 0.6), xytext=pos,ha="right",  **kw)
+
+    plt.show()
+
+def get_cd(q, k, N):
+    cd = k * (k + 1)
+    cd /= 6 * N
+    cd = q * np.sqrt(cd)
+    return cd
 
 if __name__ == "__main__":
     # all_runs_acuracia()
