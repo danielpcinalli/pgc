@@ -4,6 +4,7 @@ from operator import itemgetter
 import math
 from scipy.stats import rankdata
 import pandas as pd
+from scikit_posthocs import sign_array
 
 def weightedVoting(weight_votes):
     """Recebe lista de tuplas (peso, voto)"""
@@ -63,3 +64,18 @@ def rank_accuracy(df):
     df = -1 * df
     ranks = pd.DataFrame(rankdata(df, axis=1), index=df.index, columns=df.columns)
     return ranks
+
+def is_significant(nemenyi_results, p):
+    """
+    Dados os resultados do teste de Nemenyi e um p-value de corte,
+    retorna um dataframe onde para cada par de classificadores,
+    False indica que não há diferença significativa e True c.c.
+    """
+    df = pd.DataFrame(
+        sign_array(nemenyi_results, p), 
+        index=nemenyi_results.index, 
+        columns=nemenyi_results.columns
+        )
+    np.fill_diagonal(df.values, 0)
+    df = df.replace({1: True, 0: False})
+    return df

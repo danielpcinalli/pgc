@@ -28,7 +28,7 @@ np.random.seed(0)
 import pandas as pd
 
 from scipy.stats import friedmanchisquare, rankdata
-from scikit_posthocs import posthoc_nemenyi_friedman
+from scikit_posthocs import posthoc_nemenyi_friedman, sign_array
 
 csv_file_name_similaridade = "resultados_similaridade.csv"
 csv_file_name_acuracia = "resultados_acuracia.csv"
@@ -410,7 +410,6 @@ def rank(df_original, metodo):
     ranks = ranks.mean(axis=0).sort_values()#rank médio
     ranks.to_csv(f'ranks_{metodo}_por_parametro.csv')
 
-
 def friedman_test_similaridade():
     df = pd.read_csv(csv_file_name_similaridade)
     df = df[['qtde_classifiers', 'classifier_type', 'dataset', 'acc_mean']]
@@ -503,7 +502,7 @@ def cd_diagram():
     limits=(85, 1)
     ax.set_xlim(limits)
     ax.set_ylim(0, 1)
-    ax.spines['top'].set_position(('axes', .6))
+    ax.spines['top'].set_position(('axes', .8))
     ax.xaxis.set_ticks_position('top')
     ax.yaxis.set_visible(False)
     for pos in ['bottom', 'left', 'right']:
@@ -522,9 +521,22 @@ def cd_diagram():
           arrowprops=arrowprops, bbox=bbox_props, va="center")
     for clf, pos in zip(ranks.index.tolist(), positions):
         clf_x = ranks.loc[clf]
-        ax.annotate(clf, xy=(clf_x, 0.6), xytext=pos,ha="right",  **kw)
+        ax.annotate(clf, xy=(clf_x, 0.8), xytext=pos,ha="right",  **kw)
 
+    sig = util.is_significant(nemenyi, 0.01)
+    
+    groups = sig.apply(lambda x: x.index[x==False].tolist(), axis=1)
+    groups = [tuple(group) for group in groups if len(group) > 1]
+    groups = set(groups)
+    
+
+    for group, pos in zip(groups, [.75, .7, .65, .6, .55]):
+        x_min = ranks.loc[list(group)].min()
+        x_max = ranks.loc[list(group)].max()
+        ax.plot([x_min, x_max], [pos, pos], color='k', lw=3)
+        
     plt.show()
+
 
 def get_cd(q, k, N):
     cd = k * (k + 1)
