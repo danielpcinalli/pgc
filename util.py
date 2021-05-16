@@ -46,9 +46,7 @@ def getKSmallestIndexes(x, k):
     """
     idxs = np.argpartition(x, k)
     return idxs[:k]
-
-        
-
+      
 def getIndexedList(x, idxs):
     return list(itemgetter(*idxs)(x))
 

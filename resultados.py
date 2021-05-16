@@ -29,6 +29,7 @@ import pandas as pd
 
 from scipy.stats import friedmanchisquare, rankdata
 from scikit_posthocs import posthoc_nemenyi_friedman, sign_array
+from Orange.evaluation import graph_ranks, compute_CD
 
 csv_file_name_similaridade = "resultados_similaridade.csv"
 csv_file_name_acuracia = "resultados_acuracia.csv"
@@ -475,75 +476,34 @@ def scatterplot_rank_analysis():
     plt.legend(loc='upper center',bbox_to_anchor=(.5, 1.1), ncol=5)
     plt.savefig('scatterplot_rank_acuracia.png', bbox_inches='tight')
 
-def cd_diagram():
-    f_nemenyi = "resultado_nemenyi_similaridade.csv"
-    f_ranks = "ranks_similaridade.csv"
-    nemenyi = pd.read_csv(f_nemenyi, index_col=0)
+def cd_diagram(f_ranks, clfs_to_compare, filename_to_save):
+    # nemenyi = pd.read_csv(f_nemenyi, index_col=0)
     ranks = pd.read_csv(f_ranks, index_col=0)
+    print(ranks)
 
-    #filtra para um tipo de classificador
-    clfs_to_compare = ['tree_1', 'tree_20', 'naive-bayes_1', 'naive-bayes_20', 'perceptron_1', 'perceptron_20', 'mix_1', 'mix_20', 'knn_1', 'knn_20']
+    # nemenyi = nemenyi.loc[clfs_to_compare, clfs_to_compare]
 
-    nemenyi = nemenyi.loc[clfs_to_compare, clfs_to_compare]
 
-    #Critical difference
-    cd = get_cd(q = 7.396 / np.sqrt(2), N = 10, k = 100)
-
-    #posições onde serão colocados os textos na figura
-    positions = [(0, .5), (0, .4), (0, .3), (0, .2), (0, .1), (1, .1), (1, .2), (1, .3), (1, .4), (1, .5), ]
-
-    #coloca ranks na ordem certa para combinar com positions
     ranks = ranks.loc[clfs_to_compare]
-    ranks = ranks.sort_values(by='rank', ascending=False)
+
+    avgranks = ranks['rank'].tolist()
+    names = ranks.index.tolist()
+    cd = compute_CD(avgranks, 10)
+    graph_ranks(avgranks, names, cd=cd, filename=filename_to_save)
     
-    #prepara imagem
-    fig, ax = plt.subplots(figsize=(7,4))
-    plt.subplots_adjust(left=0.2, right=0.8)
-    limits=(85, 1)
-    ax.set_xlim(limits)
-    ax.set_ylim(0, 1)
-    ax.spines['top'].set_position(('axes', .8))
-    ax.xaxis.set_ticks_position('top')
-    ax.yaxis.set_visible(False)
-    for pos in ['bottom', 'left', 'right']:
-        ax.spines[pos].set_visible(False)
+def cd_diagram_similaridade():
+    cd_diagram(
+        f_ranks='ranks_similaridade.csv',
+        clfs_to_compare = ['tree_1', 'tree_20', 'naive-bayes_1', 'naive-bayes_20', 'perceptron_1', 'perceptron_20', 'mix_1', 'mix_20', 'knn_1', 'knn_20'],
+        filename_to_save='similaridade_cd_diagram.png'
+    )
 
-    #plota barra de CD
-    ax.plot([limits[0],limits[0]-cd], [.9,.9], color="k")
-    ax.plot([limits[0],limits[0]], [.9-0.03,.9+0.03], color="k")
-    ax.plot([limits[0]-cd,limits[0]-cd], [.9-0.03,.9+0.03], color="k") 
-    ax.text(limits[0]-cd/2., 0.92, "CD", ha="center", va="bottom") 
-
-    #plota gráfico
-    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
-    arrowprops=dict(arrowstyle="-",connectionstyle="angle,angleA=0,angleB=90")
-    kw = dict(xycoords='data',textcoords="axes fraction",
-          arrowprops=arrowprops, bbox=bbox_props, va="center")
-    for clf, pos in zip(ranks.index.tolist(), positions):
-        clf_x = ranks.loc[clf]
-        ax.annotate(clf, xy=(clf_x, 0.8), xytext=pos,ha="right",  **kw)
-
-    sig = util.is_significant(nemenyi, 0.01)
-    
-    groups = sig.apply(lambda x: x.index[x==False].tolist(), axis=1)
-    groups = [tuple(group) for group in groups if len(group) > 1]
-    groups = set(groups)
-    
-
-    for group, pos in zip(groups, [.75, .7, .65, .6, .55]):
-        x_min = ranks.loc[list(group)].min()
-        x_max = ranks.loc[list(group)].max()
-        ax.plot([x_min, x_max], [pos, pos], color='k', lw=3)
-        
-    plt.show()
-
-
-def get_cd(q, k, N):
-    cd = k * (k + 1)
-    cd /= 6 * N
-    cd = q * np.sqrt(cd)
-    return cd
-
+def cd_diagram_acuracia():
+    cd_diagram(
+        f_ranks='ranks_acuracia.csv',
+        clfs_to_compare = ['tree_0.0', 'tree_1.0', 'naive-bayes_0.0', 'naive-bayes_1.0', 'perceptron_0.0', 'perceptron_1.0', 'mix_0.0', 'mix_1.0', 'knn_0.0', 'knn_1.0'],
+        filename_to_save='acuracia_cd_diagram.png'
+    )
 if __name__ == "__main__":
     # all_runs_acuracia()
     # all_runs_similaridade()
@@ -555,4 +515,6 @@ if __name__ == "__main__":
     # rank_similaridade()
     # rank_acuracia()
     # scatterplot_rank_analysis()
-    cd_diagram()
+    # cd_diagram_similaridade()
+    cd_diagram_acuracia()
+    # print(get_cd(q = 5.255 / np.sqrt(2), N = 14, k = 10))
