@@ -476,34 +476,55 @@ def scatterplot_rank_analysis():
     plt.legend(loc='upper center',bbox_to_anchor=(.5, 1.1), ncol=5)
     plt.savefig('scatterplot_rank_acuracia.png', bbox_inches='tight')
 
-def cd_diagram(f_ranks, clfs_to_compare, filename_to_save):
-    # nemenyi = pd.read_csv(f_nemenyi, index_col=0)
-    ranks = pd.read_csv(f_ranks, index_col=0)
-    print(ranks)
 
-    # nemenyi = nemenyi.loc[clfs_to_compare, clfs_to_compare]
+def cd_diagram(df, filename_to_save):
+    
+    df_pivoted = df.pivot(index='dataset', columns='index', values='acc_mean')
 
+    #ranks (tipo de classificador, parametro)
+    ranks = util.rank_accuracy(df_pivoted)
+    ranks = ranks.mean(axis=0).sort_values()#rank médio
+    ranks = ranks.rename('rank')
 
-    ranks = ranks.loc[clfs_to_compare]
-
-    avgranks = ranks['rank'].tolist()
+    avgranks = ranks.tolist()
     names = ranks.index.tolist()
     cd = compute_CD(avgranks, 10)
     graph_ranks(avgranks, names, cd=cd, filename=filename_to_save)
-    
+    plt.show()
+
 def cd_diagram_similaridade():
-    cd_diagram(
-        f_ranks='ranks_similaridade.csv',
-        clfs_to_compare = ['tree_1', 'tree_20', 'naive-bayes_1', 'naive-bayes_20', 'perceptron_1', 'perceptron_20', 'mix_1', 'mix_20', 'knn_1', 'knn_20'],
-        filename_to_save='similaridade_cd_diagram.png'
-    )
+    df = pd.read_csv(csv_file_name_similaridade)
+    df = df[['qtde_classifiers', 'classifier_type', 'dataset', 'acc_mean']]
+
+    #transforma metodo, classifier_type e parametro em uma coluna só
+    df = df.astype({'qtde_classifiers': str})
+    df = df.set_index(keys=['classifier_type', 'qtde_classifiers'])
+    df.index = df.index.map('_'.join)
+
+    clfs_to_compare = ['tree_2', 'tree_17', 'naive-bayes_1', 'naive-bayes_15', 'perceptron_1', 'perceptron_13', 'mix_1', 'mix_19', 'knn_2', 'knn_16']
+
+    df = df.loc[clfs_to_compare, :]
+    df.reset_index(inplace=True)
+
+    cd_diagram(df, 'cd_diagram_similaridade.png')
 
 def cd_diagram_acuracia():
-    cd_diagram(
-        f_ranks='ranks_acuracia.csv',
-        clfs_to_compare = ['tree_0.0', 'tree_1.0', 'naive-bayes_0.0', 'naive-bayes_1.0', 'perceptron_0.0', 'perceptron_1.0', 'mix_0.0', 'mix_1.0', 'knn_0.0', 'knn_1.0'],
-        filename_to_save='acuracia_cd_diagram.png'
-    )
+    df = pd.read_csv(csv_file_name_acuracia)
+    df = df[['acc_min', 'classifier_type', 'dataset', 'acc_mean']]
+
+    #transforma metodo, classifier_type e parametro em uma coluna só
+    df = df.astype({'acc_min': str})
+    df = df.set_index(keys=['classifier_type', 'acc_min'])
+    df.index = df.index.map('_'.join)
+    
+    clfs_to_compare = ['tree_0.05', 'tree_1.0', 'naive-bayes_0.0', 'naive-bayes_0.6', 'perceptron_0.15', 'perceptron_0.55', 'mix_0.1', 'mix_1.0', 'knn_0.35', 'knn_1.0']
+
+    df = df.loc[clfs_to_compare, :]
+
+    df.reset_index(inplace=True)
+    cd_diagram(df, 'cd_diagram_acuracia.png')
+
+
 if __name__ == "__main__":
     # all_runs_acuracia()
     # all_runs_similaridade()
@@ -516,5 +537,6 @@ if __name__ == "__main__":
     # rank_acuracia()
     # scatterplot_rank_analysis()
     # cd_diagram_similaridade()
+    # cd_diagram_acuracia()
+    cd_diagram_similaridade()
     cd_diagram_acuracia()
-    # print(get_cd(q = 5.255 / np.sqrt(2), N = 14, k = 10))
