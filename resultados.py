@@ -285,7 +285,7 @@ def analysis_similaridade():
         #conserta layout
         plt.tight_layout()
         
-        plt.savefig(resultados_folder + f'similaridade-{classifier}.png')
+        plt.savefig(resultados_folder + f'similaridade-{classifier}.pdf')
 
 def analysis_acuracia():
     df_full = pd.read_csv(csv_file_name_acuracia)
@@ -340,7 +340,7 @@ def analysis_acuracia():
         #conserta layout
         plt.tight_layout()
 
-        plt.savefig(resultados_folder + f'acuracia-{classifier}.png')
+        plt.savefig(resultados_folder + f'acuracia-{classifier}.pdf')
 
 def friedman_test():
     df_acc = pd.read_csv(csv_file_name_acuracia)
@@ -461,7 +461,7 @@ def scatterplot_rank_analysis():
     plt.xlabel('Quantidade de classificadores')
     plt.ylabel('Rank')
     plt.legend(loc='upper center',bbox_to_anchor=(.5, 1.1), ncol=5)
-    plt.savefig('scatterplot_rank_similaridade.png', bbox_inches='tight')
+    plt.savefig('scatterplot_rank_similaridade.pdf', bbox_inches='tight')
     
     plt.clf()
 
@@ -474,8 +474,7 @@ def scatterplot_rank_analysis():
     plt.xlabel('Acurácia mínima')
     plt.ylabel('Rank')
     plt.legend(loc='upper center',bbox_to_anchor=(.5, 1.1), ncol=5)
-    plt.savefig('scatterplot_rank_acuracia.png', bbox_inches='tight')
-
+    plt.savefig('scatterplot_rank_acuracia.pdf', bbox_inches='tight')
 
 def cd_diagram(df, filename_to_save):
     
@@ -522,6 +521,31 @@ def cd_diagram_acuracia():
     df = df.loc[clfs_to_compare, :]
 
     df.reset_index(inplace=True)
+    cd_diagram(df, 'cd_diagram_all.png')
+
+def cd_diagram_tudo():
+    df_sim = pd.read_csv(csv_file_name_similaridade)
+    df_acc = pd.read_csv(csv_file_name_acuracia)
+
+    #transforma metodo, classifier_type e parametro em uma coluna só
+    df_sim = df_sim.astype({'qtde_classifiers': str})
+    df_sim = df_sim.set_index(keys=['classifier_type', 'qtde_classifiers'])
+    df_sim.index = df_sim.index.map('_'.join)
+    df_sim = df_sim.rename(columns={'n_objetos_gerados': 'n_pontos'})
+
+    #transforma metodo, classifier_type e parametro em uma coluna só
+    df_acc = df_acc.astype({'acc_min': str})
+    df_acc = df_acc.set_index(keys=['classifier_type', 'acc_min'])
+    df_acc.index = df_acc.index.map('_'.join)
+    df_acc = df_acc.rename(columns={'n_pontos_proximos': 'n_pontos'})
+
+    df = pd.concat([df_acc, df_sim])
+
+    clfs_to_compare = ['tree_0.05', 'tree_1.0', 'naive-bayes_0.0', 'naive-bayes_0.6', 'perceptron_0.15', 'perceptron_0.55', 'mix_0.1', 'mix_1.0', 'knn_0.35', 'knn_1.0'] + ['tree_2', 'tree_17', 'naive-bayes_1', 'naive-bayes_15', 'perceptron_1', 'perceptron_13', 'mix_1', 'mix_19', 'knn_2', 'knn_16']
+
+    df = df.loc[clfs_to_compare, :]
+
+    df.reset_index(inplace=True)
     cd_diagram(df, 'cd_diagram_acuracia.png')
 
 
@@ -538,5 +562,6 @@ if __name__ == "__main__":
     # scatterplot_rank_analysis()
     # cd_diagram_similaridade()
     # cd_diagram_acuracia()
-    cd_diagram_similaridade()
-    cd_diagram_acuracia()
+    # cd_diagram_similaridade()
+    # cd_diagram_acuracia()
+    cd_diagram_tudo()
